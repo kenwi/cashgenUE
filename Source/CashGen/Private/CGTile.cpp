@@ -90,6 +90,10 @@ void ACGTile::SetupTile(CGPoint aOffset, FCGTerrainConfig* aTerrainConfig, FVect
 	WorldOffset = aWorldOffset;
 	TerrainConfigMaster = aTerrainConfig;
 
+	// Disable tick if we're not doing lod transitions
+
+	SetActorTickEnabled(TerrainConfigMaster->DitheringLODTransitions && aTerrainConfig->LODs.Num() > 1);
+
 	for (int32 i = 0; i < aTerrainConfig->LODs.Num(); ++i)
 	{
 
@@ -106,11 +110,30 @@ void ACGTile::SetupTile(CGPoint aOffset, FCGTerrainConfig* aTerrainConfig, FVect
 
 		LODStatus.Add(i, ELODStatus::NOT_CREATED);
 
-		if (TerrainConfigMaster->TerrainMaterialInstanceParent != nullptr)
+		// Use dynamic material instances and do LOD dithering
+		if (TerrainConfigMaster->TerrainMaterial != nullptr && TerrainConfigMaster->DitheringLODTransitions && aTerrainConfig->LODs.Num() > 1)
 		{
-			MaterialInstances.Add(i, UMaterialInstanceDynamic::Create(TerrainConfigMaster->TerrainMaterialInstanceParent, this));
+			MaterialInstances.Add(i, UMaterialInstanceDynamic::Create(TerrainConfigMaster->TerrainMaterial, this));
 			MeshComponents[i]->SetMaterial(0, MaterialInstances[i]);
 		}
+		// Just use a static material
+		else if (TerrainConfigMaster->TerrainMaterial)
+		{
+			Material = TerrainConfigMaster->TerrainMaterial;
+			MeshComponents[i]->SetMaterial(0, Material);
+		}
+		// Or just a static material instance
+		else if (TerrainConfigMaster->TerrainMaterialInstance && !TerrainConfigMaster->MakeDynamicMaterialInstance)
+		{
+			MaterialInstance = TerrainConfigMaster->TerrainMaterialInstance;
+			MeshComponents[i]->SetMaterial(0, MaterialInstance);
+		}
+		else if (TerrainConfigMaster->TerrainMaterialInstance && TerrainConfigMaster->MakeDynamicMaterialInstance)
+		{
+			MaterialInstances.Add(i, UMaterialInstanceDynamic::Create(TerrainConfigMaster->TerrainMaterialInstance, this));
+			MeshComponents[i]->SetMaterial(0, MaterialInstances[i]);
+		}
+		
 	}
 
 }
@@ -149,6 +172,9 @@ void ACGTile::UpdateMesh(uint8 aLOD, bool aIsInPlaceUpdate, TArray<FVector>*	aVe
 		}
 	}
 
+
+
+
 }
 
 /************************************************************************/
@@ -157,4 +183,15 @@ void ACGTile::UpdateMesh(uint8 aLOD, bool aIsInPlaceUpdate, TArray<FVector>*	aVe
 FVector ACGTile::GetCentrePos()
 {
 	return  FVector(((Offset.X + 0.5f) * TerrainConfigMaster->TileXUnits * TerrainConfigMaster->UnitSize) - WorldOffset.X, ((Offset.Y + 0.5f) * TerrainConfigMaster->TileYUnits * TerrainConfigMaster->UnitSize) - WorldOffset.Y, 0.0f);
+}
+
+UMaterialInstanceDynamic* ACGTile::GetMaterialInstanceDynamic(const uint8 aLOD)
+{
+	if (aLOD < MaterialInstances.Num() - 1)
+	{
+		return MaterialInstances[aLOD];
+	}
+
+	return nullptr;
+	
 }

@@ -17,6 +17,8 @@ class ACGTile : public AActor
 
 	TMap<uint8, URuntimeMeshComponent*> MeshComponents;
 	TMap<uint8, UMaterialInstanceDynamic*> MaterialInstances;
+	UMaterialInstance* MaterialInstance;
+	UMaterial* Material;
 	TMap<uint8, ELODStatus> LODStatus;
 
 	float LODTransitionOpacity = 0.0f;
@@ -29,6 +31,8 @@ class ACGTile : public AActor
 public:
 	ACGTile();
 	~ACGTile();
+
+public:
 
 	CGPoint Offset;
 	FVector WorldOffset;
@@ -50,5 +54,7 @@ public:
 		TArray<FRuntimeMeshTangent>* aTangents);
 
 	FVector GetCentrePos();
+
+	UMaterialInstanceDynamic* GetMaterialInstanceDynamic(const uint8 aLOD);
 
 };

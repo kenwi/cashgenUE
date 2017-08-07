@@ -38,9 +38,19 @@ class ACGTerrainManager : public AActor
 	float TimeSinceLastSweep;
 	const float SweepInterval = 0.1f;
 
+	bool isFirstDraw = true;
+
 public:
 	ACGTerrainManager();
 	~ACGTerrainManager();
+
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTileMeshUpdated, ACGTile*, Tile);
+	UPROPERTY(BlueprintAssignable)
+		FTileMeshUpdated OnTileMeshUpdated;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "CGWorld")
+	void OnInitialTileDrawComplete();
 
 	UPROPERTY()
 	AActor* TrackingActor;
@@ -66,5 +76,5 @@ public:
 
 	void SpawnTiles(AActor* aTrackingActor, const FCGTerrainConfig aTerrainConfig, const int32 aXTiles, const int32 aYTiles);
 
-	
+	void BeginDestroy() override;
 };

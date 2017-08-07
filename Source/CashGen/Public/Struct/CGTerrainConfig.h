@@ -54,8 +54,17 @@ struct FCGTerrainConfig
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen | Main")
 		uint8 MeshUpdatesPerFrame = 1;
 	/** Material for the terrain mesh */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen | Erosion")
-	UMaterial* TerrainMaterialInstanceParent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen | Materials")
+	UMaterial* TerrainMaterial;
+	/** If checked and numLODs > 1, material will be instanced and TerrainOpacity parameters used to dither LOD transitions */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen | Materials")
+	bool  DitheringLODTransitions;
+	/** If no TerrainMaterial and LOD transitions disabled, just use the same static instance for all LODs **/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen | Materials")
+	UMaterialInstance* TerrainMaterialInstance;
+	/** Make a dynamic material instance */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen | Materials")
+	bool MakeDynamicMaterialInstance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CashGen | LODs")
 	TArray<FCGLODConfig> LODs;
 

@@ -10,13 +10,7 @@ ACGTerrainManager::ACGTerrainManager()
 
 ACGTerrainManager::~ACGTerrainManager()
 {
-	for (auto& thread : WorkerThreads)
-	{
-		if (thread != nullptr)
-		{
-			thread->Kill(true);
-		}
-	}
+
 }
 
 void ACGTerrainManager::BeginPlay()
@@ -89,6 +83,8 @@ void ACGTerrainManager::Tick(float DeltaSeconds)
 
 				updateJob.Tile->UpdateMesh(updateJob.LOD, updateJob.IsInPlaceUpdate, updateJob.Vertices, updateJob.Triangles, updateJob.Normals, updateJob.UV0, updateJob.VertexColors, updateJob.Tangents);
 
+				OnTileMeshUpdated.Broadcast(updateJob.Tile);
+
 				int32 updateMS = (duration_cast<milliseconds>(
 					system_clock::now().time_since_epoch()
 					) - startMs).count();
@@ -121,6 +117,12 @@ void ACGTerrainManager::Tick(float DeltaSeconds)
 			SpawnTiles(TrackingActor, TerrainConfig, XTiles, YTiles);
 		}
 	}
+
+	if (isFirstDraw && PendingJobs.IsEmpty() && UpdateJobs.IsEmpty())
+	{
+		OnInitialTileDrawComplete();
+		isFirstDraw = false;
+	}
 }
 
 void ACGTerrainManager::SweepLODs()
@@ -140,6 +142,18 @@ void ACGTerrainManager::SweepLODs()
 	}
 }
 
+void ACGTerrainManager::BeginDestroy()
+{
+	for (auto& thread : WorkerThreads)
+	{
+		if (thread != nullptr)
+		{
+			thread->Kill();
+		}
+	}
+
+	Super::BeginDestroy();
+}
 
 uint8 ACGTerrainManager::GetLODForTile(ACGTile* aTile)
 {
